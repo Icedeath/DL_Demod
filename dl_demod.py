@@ -128,9 +128,9 @@ if __name__ == "__main__":
     with h5py.File(args.dataset, 'r') as data:
         for i in data:
             locals()[i] = data[i].value
-    y_train = finalimput2.reshape(finalimput2.shape[1]/3, 3)
+    y_train = finalimput2.reshape(int(finalimput2.shape[1]/3), 3)
     if args.model == 1:
-        x_train = finaldata2.reshape(finaldata2.shape[1]/48,1,48,1)
+        x_train = finaldata2.reshape(int(finaldata2.shape[1]/48),1,48,1)
         model = build_CNN(input_shape = x_train.shape[1:])
         print('Training using CNN...')
     if args.model == 2:
