@@ -72,9 +72,9 @@ def build_SAE(input_shape):
 
 
 def margin_loss(y_true, y_pred, margin = 0.9, downweight = 0.5):
-    positive_cost = y_true * K.cast(
+    positive_cost = (y_true + 1)/2 * K.cast(
                     K.less(y_pred, margin), 'float32') * K.pow((y_pred - margin), 2)
-    negative_cost = (1 - y_true) * K.cast(
+    negative_cost = (1 - (y_true + 1)/2) * K.cast(
                     K.greater(y_pred, -margin), 'float32') * K.pow((y_pred + margin), 2)
     return 0.5 * positive_cost + downweight * 0.5 * negative_cost
 
@@ -101,24 +101,25 @@ def train(model, data, args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Capsule Network on MNIST.")
-    parser.add_argument('--epochs', default=20, type=int)
+    parser.add_argument('--epochs', default=5, type=int,
+                        help="迭代次数")
     parser.add_argument('--batch_size', default=50, type=int)
     parser.add_argument('--lr', default=0.002, type=float,
-                        help="Initial learning rate")
+                        help="学习率")
     parser.add_argument('--lr_decay', default=0.92, type=float,
-                        help="The value multiplied by lr at each epoch. Set a larger value for larger epochs")
+                        help="衰减")
     parser.add_argument('-sf', '--save_file', default='dl_demod.h5',
-                        help="Name of saved weight file")
+                        help="保存的权重文件")
     parser.add_argument('-t', '--test', default=0,type=int,
-                        help="Test only model")
+                        help="测试模式")
     parser.add_argument('-l', '--load', default=0,type=int,
-                        help="load weight file or not")
+                        help="如果需要载入模型，设为1")
     parser.add_argument('-p', '--plot', default=0,type=int,
-                        help="plot training loss after finished if plot==1")
+                        help="设为1时，在训练结束后画出loss变化曲线")
     parser.add_argument('-d', '--dataset', default='data_demod.mat',
-                        help="name of dataset that needs loading")
-    parser.add_argument('-m', '--model', default= 2,type = int,
-                        help="select 1 for CNN and 2 for SAE")
+                        help="数据文件")
+    parser.add_argument('-m', '--model', default= 1,type = int,
+                        help="1为卷积，2为全连接")
     args = parser.parse_args()
     print(args)
     
