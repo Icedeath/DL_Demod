@@ -134,7 +134,7 @@ if __name__ == "__main__":
         model = build_CNN(input_shape = x_train.shape[1:])
         print('Training using CNN...')
     if args.model == 2:
-        x_train = finaldata2.reshape(finaldata2.shape[1]/48,48)
+        x_train = finaldata2.reshape(int(finaldata2.shape[1])/48,48)
         model = build_SAE(input_shape = x_train.shape[1:])    
         print('Training using SAE...')
         
