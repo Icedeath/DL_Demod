@@ -102,9 +102,9 @@ def train(model, data, args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Capsule Network on MNIST.")
-    parser.add_argument('--epochs', default=50, type=int,
+    parser.add_argument('--epochs', default=20, type=int,
                         help="迭代次数")
-    parser.add_argument('--batch_size', default=100, type=int)
+    parser.add_argument('--batch_size', default=200, type=int)
     parser.add_argument('--lr', default=0.002, type=float,
                         help="学习率")
     parser.add_argument('--lr_decay', default=0.95, type=float,
@@ -113,7 +113,7 @@ if __name__ == "__main__":
                         help="保存的权重文件")
     parser.add_argument('-t', '--test', default=0,type=int,
                         help="测试模式")
-    parser.add_argument('-l', '--load', default=0,type=int,
+    parser.add_argument('-l', '--load', default=1,type=int,
                         help="如果需要载入模型，设为1")
     parser.add_argument('-p', '--plot', default=0,type=int,
                         help="设为1时，在训练结束后画出loss变化曲线")
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         model = build_CNN(input_shape = x_train.shape[1:])
         print('Training using CNN...')
     if args.model == 2:
-        x_train = finaldata2.reshape(int(finaldata2.shape[1])/48,48)
+        x_train = finaldata2.reshape(int(finaldata2.shape[1]/48),48)
         model = build_SAE(input_shape = x_train.shape[1:])    
         print('Training using SAE...')
         
