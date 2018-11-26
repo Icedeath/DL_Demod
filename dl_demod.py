@@ -51,7 +51,8 @@ def build_CNN(input_shape):
     conv1 = BN()(conv1)
     
     conv1 = layers.Conv2D(filters=3, kernel_size=(1,1), strides=1, padding='same')(conv1)
-    output = layers.pooling.GlobalAveragePooling2D()(conv1)
+    conv1 = layers.pooling.GlobalAveragePooling2D()(conv1)
+    output = layers.Dense(3, activation = 'tanh')(conv1)
 
     model = models.Model(x, output)
     return model
@@ -71,12 +72,12 @@ def build_SAE(input_shape):
 
 
 
-def margin_loss(y_true, y_pred, margin = 0.9, downweight = 0.5):
+def margin_loss(y_true, y_pred, margin = 0.9):
     positive_cost = (y_true + 1)/2 * K.cast(
                     K.less(y_pred, margin), 'float32') * K.pow((y_pred - margin), 2)
     negative_cost = (1 - (y_true + 1)/2) * K.cast(
                     K.greater(y_pred, -margin), 'float32') * K.pow((y_pred + margin), 2)
-    return 0.5 * positive_cost + downweight * 0.5 * negative_cost
+    return 0.5 * positive_cost + 0.5 * negative_cost
 
 
 def train(model, data, args):
@@ -101,12 +102,12 @@ def train(model, data, args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Capsule Network on MNIST.")
-    parser.add_argument('--epochs', default=5, type=int,
+    parser.add_argument('--epochs', default=50, type=int,
                         help="迭代次数")
-    parser.add_argument('--batch_size', default=50, type=int)
+    parser.add_argument('--batch_size', default=100, type=int)
     parser.add_argument('--lr', default=0.002, type=float,
                         help="学习率")
-    parser.add_argument('--lr_decay', default=0.92, type=float,
+    parser.add_argument('--lr_decay', default=0.95, type=float,
                         help="衰减")
     parser.add_argument('-sf', '--save_file', default='dl_demod.h5',
                         help="保存的权重文件")
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     print('-'*30 + 'Begin: test' + '-'*30)
     print('Predicting final symbols...')
     y_pred1 = model.predict(x_train, batch_size=args.batch_size,verbose=1)
-    y_pred = np.reshape(y_pred1, np.prod(y_pred1.shape))
+    y_pred = np.sign(np.reshape(y_pred1, np.prod(y_pred1.shape)))
     y = np.squeeze(finalimput2)
     print('Train acc:', np.sum(y_pred == y)/np.float(y.shape[0]))
     print('-' * 30 + 'End: test' + '-' * 30)   
