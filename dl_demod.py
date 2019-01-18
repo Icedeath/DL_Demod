@@ -7,7 +7,9 @@ Created on Sun Nov 25 15:27:24 2018
 """
 
 #coding=utf
-
+from keras.models import Sequential
+from keras.layers.core import Dense
+from keras.layers import LSTM
 from keras.utils import multi_gpu_model
 import numpy as np
 from keras import layers, models, optimizers
@@ -18,7 +20,7 @@ import tensorflow as tf
 from keras import callbacks
 from keras.layers.normalization import BatchNormalization as BN
 import argparse
-#import scipy.io as sio
+import scipy.io as sio
 import h5py
 from keras.layers.advanced_activations import ELU
 
@@ -69,6 +71,16 @@ def build_SAE(input_shape):
     model = models.Model(x, output)
     return model
 
+def build_RNN(input_shape):
+    model = Sequential()
+    model.add(LSTM(200,input_shape=input_shape,return_sequences=True, activation = 'tanh'))
+    model.add(LSTM(500,return_sequences=True, activation = 'tanh'))
+    model.add(LSTM(500,return_sequences=True, activation = 'tanh'))
+    model.add(LSTM(300,return_sequences=True, activation = 'tanh'))
+    model.add(Dense(1))
+    
+    return model
+
 
 
 
@@ -113,14 +125,14 @@ if __name__ == "__main__":
                         help="保存的权重文件")
     parser.add_argument('-t', '--test', default=0,type=int,
                         help="测试模式")
-    parser.add_argument('-l', '--load', default=1,type=int,
+    parser.add_argument('-l', '--load', default=0,type=int,
                         help="如果需要载入模型，设为1")
     parser.add_argument('-p', '--plot', default=0,type=int,
                         help="设为1时，在训练结束后画出loss变化曲线")
     parser.add_argument('-d', '--dataset', default='data_demod.mat',
                         help="数据文件")
-    parser.add_argument('-m', '--model', default= 1,type = int,
-                        help="1为卷积，2为全连接")
+    parser.add_argument('-m', '--model', default= 3,type = int,
+                        help="1为卷积，2为全连接,3为循环")
     args = parser.parse_args()
     print(args)
     
@@ -129,15 +141,22 @@ if __name__ == "__main__":
     with h5py.File(args.dataset, 'r') as data:
         for i in data:
             locals()[i] = data[i].value
-    y_train = finalimput2.reshape(int(finalimput2.shape[1]/3), 3)
+    
     if args.model == 1:
         x_train = finaldata2.reshape(int(finaldata2.shape[1]/48),1,48,1)
+        y_train = finalimput2.reshape(int(finalimput2.shape[1]/3), 3)
         model = build_CNN(input_shape = x_train.shape[1:])
         print('Training using CNN...')
     if args.model == 2:
         x_train = finaldata2.reshape(int(finaldata2.shape[1]/48),48)
+        y_train = finalimput2.reshape(int(finalimput2.shape[1]/3), 3)
         model = build_SAE(input_shape = x_train.shape[1:])    
         print('Training using SAE...')
+    if args.model == 3:
+        x_train = finaldata2.reshape(int(finaldata2.shape[1]/48),3,16)
+        y_train = finalimput2.reshape(int(finalimput2.shape[1]/3), 3,1)
+        model = build_RNN(input_shape = x_train.shape[1:])    
+        print('Training using RNN...')
         
     model.summary()
 
@@ -162,3 +181,4 @@ if __name__ == "__main__":
     y = np.squeeze(finalimput2)
     print('Train acc:', np.sum(y_pred == y)/np.float(y.shape[0]))
     print('-' * 30 + 'End: test' + '-' * 30)   
+    sio.savemat('y_pred.mat', {'y_pred':y_pred})
